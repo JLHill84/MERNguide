@@ -48,6 +48,13 @@
   margin: 0.5rem;
 }
 
+/* no no no no yes? */
+.map-container {
+  height: 20rem;
+  width: 95%;
+}
+
+
 @media (min-width: 768px) {
   .place-item__image {
     height: 20rem;
