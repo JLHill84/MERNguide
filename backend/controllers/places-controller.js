@@ -35,6 +35,7 @@ let DUMMY_PLACES = [
 
 const getPlaceById = (req, res, next) => {
   const placeId = req.params.id;
+
   const place = DUMMY_PLACES.find(p => {
     return p.id === placeId;
   });
@@ -48,12 +49,14 @@ const getPlaceById = (req, res, next) => {
 
 const getPlacesByUserId = (req, res, next) => {
   const userId = req.params.id;
+
   const places = DUMMY_PLACES.filter(p => {
     return p.creator === userId;
   });
 
   if (!places || places.length === 0) {
-    return next(new HttpError("No places for a user with that ID pal :(", 404));
+    return next(
+      new HttpError("No places for a user with that ID pal :(", 404));
   }
 
   res.json({ places });
@@ -63,7 +66,7 @@ const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    next(new HttpError("Fix your inputs comrade", 422));
+    return next(new HttpError("Fix your inputs comrade", 422));
   }
 
   const { title, description, address, creator } = req.body;
@@ -72,7 +75,7 @@ const createPlace = async (req, res, next) => {
   try {
     coordinates = await getCoordsForAddress(address);
   } catch (error) {
-    return next();
+    return next(error);
   }
 
   const createdPlace = {
@@ -93,7 +96,7 @@ const updatePlace = (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    next(new HttpError("Fix your patch inputs comrade", 422));
+    return next(new HttpError("Fix your patch inputs comrade", 422));
   }
   const { title, description } = req.body;
   const placeId = req.params.pid;
