@@ -4,36 +4,8 @@ const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
 const Place = require("../models/place");
-
-// ALL SEED DATA HAS BEEN REPLACED BY MONGODB
-// let DUMMY_PLACES = [
-//   {
-//     id: "p1",
-//     title: "The Manor",
-//     description: "The house, before it was built...",
-//     imageURL:
-//       "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
-//     address: "5019 Manor Stone Ln.",
-//     location: {
-//       lat: 29.5099105,
-//       lng: -95.8001341
-//     },
-//     creator: "u1"
-//   },
-//   {
-//     id: "p2",
-//     title: "Flatiron",
-//     description: "Miss it.",
-//     imageURL:
-//       "https://lh5.googleusercontent.com/p/AF1QipOMim5bmXED53yBrsSTqGwgOIzg_jdHMgUSvx6y=w408-h272-k-no",
-//     address: "807 Main St.",
-//     location: {
-//       lat: 29.7589609,
-//       lng: -95.363447
-//     },
-//     creator: "u2"
-//   }
-// ];
+const User = require("../models/user");
+const mongoose = require("mongoose");
 
 const getPlaceById = async (req, res, next) => {
   const placeId = req.params.id;
@@ -94,17 +66,32 @@ const createPlace = async (req, res, next) => {
     creator
   });
 
+  let user;
   try {
-    await createdPlace.save();
-  } catch (error) {
-    console.log(error);
-    error = new HttpError("It didn't work colleague", 500);
+    user = await User.findById(creator);
+  } catch (e) {
+    const error = new HttpError("Failure :(", 500);
     return next(error);
   }
 
-  // this code was for the static seed data version
-  // it was replaced by the above Place and try/catch block
-  // DUMMY_PLACES.push(createdPlace);
+  if (!user) {
+    const error = new HttpError("Could not find that friend", 404);
+    return next(error);
+  }
+
+  try {
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await createdPlace.save({ session: sess });
+    user.places.push(createdPlace);
+    await user.save({ session: sess });
+    await sess.commitTransaction();
+  } catch (err) {
+    console.log("fresh run");
+    console.log(err);
+    const error = new HttpError("It didn't work colleague", 500);
+    return next(error);
+  }
 
   res.status(201).json({ place: createdPlace });
 };
@@ -117,10 +104,6 @@ const updatePlace = async (req, res, next) => {
   }
   const { title, description } = req.body;
   const placeId = req.params.pid;
-
-  // SEED DATA NO LONGER BEING UTILIZED
-  // const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeId) };
-  // const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeId);
 
   let place;
   try {
