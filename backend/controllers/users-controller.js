@@ -2,50 +2,86 @@ const uuid = require("uuid/v4");
 const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
+const User = require("../models/user");
 
-const DUMMY_USERS = [
-  {
-    id: "u1",
-    name: "Joshua L. Hill",
-    email: "test@test.com",
-    password: "testers"
+// NO MORE SEED DATA, IT IS NO LONGER THE WAY
+// const DUMMY_USERS = [
+//   {
+//     id: "u1",
+//     name: "Joshua L. Hill",
+//     email: "test@test.com",
+//     password: "testers"
+//   }
+// ];
+
+const getUsers = async (req, res, next) => {
+  let users;
+  try {
+    users = await User.find({}, "-password");
+  } catch (err) {
+    const error = new HttpError("Did not collect all users", 500);
+    return next(error);
   }
-];
-
-const getUsers = (req, res, next) => {
-  res.status(200).json({ users: DUMMY_USERS });
+  res.json({
+    users: users.map(user => user.toObject({ getters: true }))
+  });
 };
 
-const signup = (req, res, next) => {
+const signup = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    throw new HttpError("Fix your signup inputs comrade", 422);
+    return next(new HttpError("Fix your signup inputs comrade", 422));
   }
-  const { name, email, password } = req.body;
+  const { name, email, password, image, places } = req.body;
 
-  const hasUser = DUMMY_USERS.find(u => u.email === email);
-
-  if (hasUser) {
-    throw new HttpError("Email already in use amigo", 422);
+  let existingUser;
+  try {
+    existingUser = await User.findOne({ email: email });
+  } catch (e) {
+    const error = new HttpError("Signing up no bueno", 500);
+    return next(error);
   }
 
-  const createdUser = {
-    id: uuid(),
+  if (existingUser) {
+    const error = new HttpError("User already exists :P", 422);
+    return next(error);
+  }
+
+  const createdUser = new User({
     name,
     email,
-    password
-  };
-  DUMMY_USERS.push(createdUser);
-  res.status(201).json({ user: createdUser });
+    password,
+    image,
+    places
+  });
+
+  try {
+    await createdUser.save();
+  } catch (error) {
+    console.log(error);
+    error = new HttpError("Signup didn't work colleague", 500);
+    return next(error);
+  }
+
+  // DUMMY_USERS.push(createdUser);
+  res.status(201).json({ user: createdUser.toObject({ getters: true }) });
 };
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
   const { email, password } = req.body;
 
-  const identifiedUser = DUMMY_USERS.find(u => u.email === email);
-  if (!identifiedUser || identifiedUser.password === password) {
-    throw new HttpError("User not found, check your creds", 401);
+  let existingUser;
+  try {
+    existingUser = await User.findOne({ email: email });
+  } catch (e) {
+    const error = new HttpError("Logging in no bueno", 500);
+    return next(error);
+  }
+
+  if (!existingUser || existingUser.password !== password) {
+    const error = new HttpError("Bad creds buddy", 401);
+    return next(error);
   }
 
   res.json({ mesage: "logged in my friend" });

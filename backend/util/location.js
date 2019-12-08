@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const API_KEY = require('./.keys.js');
+const API_KEY = require("./.keys.js");
 
 // const API_KEY = "AIzaSyBEm32aBiHXg3Lq8lm707guvOLvDXI1_ZA";
 
@@ -16,7 +16,7 @@ async function getCoordsForAddress(address) {
 
   if (!data || data.status === "ZERO_RESULTS") {
     const error = new HttpError("Couldn't find that address sadly", 422);
-    throw error;
+    return next(error);
   }
 
   console.log(data);

@@ -35,32 +35,38 @@ const Place = require("../models/place");
 //   }
 // ];
 
-const getPlaceById = (req, res, next) => {
+const getPlaceById = async (req, res, next) => {
   const placeId = req.params.id;
 
-  const place = DUMMY_PLACES.find(p => {
-    return p.id === placeId;
-  });
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (error) {
+    return next(new HttpError("Call the DBA...", 404));
+  }
 
   if (!place) {
     return next(new HttpError("No place with that ID pal :(", 404));
   }
 
-  res.json({ place });
+  res.json({ place: place.toObject({ getters: true }) });
 };
 
-const getPlacesByUserId = (req, res, next) => {
+const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.id;
 
-  const places = DUMMY_PLACES.filter(p => {
-    return p.creator === userId;
-  });
+  let places;
+  try {
+    places = await Place.find({ creator: userId });
+  } catch (error) {
+    return next(new HttpError("Fetching failed friend-o", 500));
+  }
 
   if (!places || places.length === 0) {
     return next(new HttpError("No places for a user with that ID pal :(", 404));
   }
 
-  res.json({ places });
+  res.json({ places: places.map(place => place.toObject({ getters: true })) });
 };
 
 const createPlace = async (req, res, next) => {
@@ -70,7 +76,7 @@ const createPlace = async (req, res, next) => {
     return next(new HttpError("Fix your inputs comrade", 422));
   }
 
-  const { title, description, address, creator } = req.body;
+  const { title, description, address, image, creator } = req.body;
 
   let coordinates;
   try {
@@ -82,8 +88,7 @@ const createPlace = async (req, res, next) => {
   const createdPlace = new Place({
     title,
     description,
-    image:
-      "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
+    image,
     address,
     location: coordinates,
     creator
@@ -104,7 +109,7 @@ const createPlace = async (req, res, next) => {
   res.status(201).json({ place: createdPlace });
 };
 
-const updatePlace = (req, res, next) => {
+const updatePlace = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -113,25 +118,51 @@ const updatePlace = (req, res, next) => {
   const { title, description } = req.body;
   const placeId = req.params.pid;
 
-  const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeId) };
-  const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeId);
-  updatedPlace.title = title;
-  updatedPlace.description = description;
+  // SEED DATA NO LONGER BEING UTILIZED
+  // const updatedPlace = { ...DUMMY_PLACES.find(p => p.id === placeId) };
+  // const placeIndex = DUMMY_PLACES.findIndex(p => p.id === placeId);
 
-  DUMMY_PLACES[placeIndex] = updatedPlace;
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError("Bad times", 500);
+    return next(error);
+  }
 
-  res.status(200).json({ place: updatedPlace });
+  place.title = title;
+  place.description = description;
+
+  try {
+    await place.save();
+  } catch (e) {
+    const error = new HttpError("Bad times on the save", 500);
+    return next(error);
+  }
+
+  // DUMMY_PLACES[placeIndex] = updatedPlace;
+
+  res.status(200).json({ place: place.toObject({ getters: true }) });
 };
 
-const deletePlace = (req, res, next) => {
+const deletePlace = async (req, res, next) => {
   const placeId = req.params.pid;
-  if (!DUMMY_PLACES.find(p => p.id === placeId)) {
-    throw new HttpError(
-      "Acquaintance, couldn't find a place with that ID",
-      404
-    );
+
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError("Bad times delete find", 500);
+    return next(error);
   }
-  DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
+
+  try {
+    await place.remove();
+  } catch (e) {
+    const error = new HttpError("Bad times on the save", 500);
+    return next(error);
+  }
+
   res.status(200).json({ message: "Place deleted!!" });
 };
 
