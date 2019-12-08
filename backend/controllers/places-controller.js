@@ -3,35 +3,37 @@ const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
+const Place = require("../models/place");
 
-let DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "The Manor",
-    description: "The house, before it was built...",
-    imageURL:
-      "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
-    address: "5019 Manor Stone Ln.",
-    location: {
-      lat: 29.5099105,
-      lng: -95.8001341
-    },
-    creator: "u1"
-  },
-  {
-    id: "p2",
-    title: "Flatiron",
-    description: "Miss it.",
-    imageURL:
-      "https://lh5.googleusercontent.com/p/AF1QipOMim5bmXED53yBrsSTqGwgOIzg_jdHMgUSvx6y=w408-h272-k-no",
-    address: "807 Main St.",
-    location: {
-      lat: 29.7589609,
-      lng: -95.363447
-    },
-    creator: "u2"
-  }
-];
+// ALL SEED DATA HAS BEEN REPLACED BY MONGODB
+// let DUMMY_PLACES = [
+//   {
+//     id: "p1",
+//     title: "The Manor",
+//     description: "The house, before it was built...",
+//     imageURL:
+//       "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
+//     address: "5019 Manor Stone Ln.",
+//     location: {
+//       lat: 29.5099105,
+//       lng: -95.8001341
+//     },
+//     creator: "u1"
+//   },
+//   {
+//     id: "p2",
+//     title: "Flatiron",
+//     description: "Miss it.",
+//     imageURL:
+//       "https://lh5.googleusercontent.com/p/AF1QipOMim5bmXED53yBrsSTqGwgOIzg_jdHMgUSvx6y=w408-h272-k-no",
+//     address: "807 Main St.",
+//     location: {
+//       lat: 29.7589609,
+//       lng: -95.363447
+//     },
+//     creator: "u2"
+//   }
+// ];
 
 const getPlaceById = (req, res, next) => {
   const placeId = req.params.id;
@@ -55,8 +57,7 @@ const getPlacesByUserId = (req, res, next) => {
   });
 
   if (!places || places.length === 0) {
-    return next(
-      new HttpError("No places for a user with that ID pal :(", 404));
+    return next(new HttpError("No places for a user with that ID pal :(", 404));
   }
 
   res.json({ places });
@@ -78,16 +79,27 @@ const createPlace = async (req, res, next) => {
     return next(error);
   }
 
-  const createdPlace = {
-    id: uuid(),
+  const createdPlace = new Place({
     title,
     description,
-    location: coordinates,
+    image:
+      "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
     address,
+    location: coordinates,
     creator
-  };
+  });
 
-  DUMMY_PLACES.push(createdPlace);
+  try {
+    await createdPlace.save();
+  } catch (error) {
+    console.log(error);
+    error = new HttpError("It didn't work colleague", 500);
+    return next(error);
+  }
+
+  // this code was for the static seed data version
+  // it was replaced by the above Place and try/catch block
+  // DUMMY_PLACES.push(createdPlace);
 
   res.status(201).json({ place: createdPlace });
 };
