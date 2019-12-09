@@ -33,7 +33,7 @@ const signup = async (req, res, next) => {
   if (!errors.isEmpty()) {
     return next(new HttpError("Fix your signup inputs comrade", 422));
   }
-  const { name, email, password, image } = req.body;
+  const { name, email, password } = req.body;
 
   let existingUser;
   try {
@@ -52,7 +52,7 @@ const signup = async (req, res, next) => {
     name,
     email,
     password,
-    image,
+    // image, ----- IF UNCOMMENTED, PUT image BACK INTO THE req.body DESTRUCTURING
     places: []
   });
 

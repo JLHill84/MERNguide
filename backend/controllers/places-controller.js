@@ -133,16 +133,26 @@ const deletePlace = async (req, res, next) => {
 
   let place;
   try {
-    place = await Place.findById(placeId);
+    place = await Place.findById(placeId).populate("creator");
   } catch (err) {
     const error = new HttpError("Bad times delete find", 500);
     return next(error);
   }
 
+  if (!place) {
+    const error = new HttpError("Didn't find any such place", 404);
+    return next(error);
+  }
+
   try {
-    await place.remove();
+    const sess = await mongoose.startSession();
+    sess.startTransaction();
+    await place.remove({ session: sess });
+    place.creator.places.pull(place);
+    await place.creator.save({session: sess});
+    await sess.commitTransaction();
   } catch (e) {
-    const error = new HttpError("Bad times on the save", 500);
+    const error = new HttpError("Bad times on the remove", 500);
     return next(error);
   }
 
