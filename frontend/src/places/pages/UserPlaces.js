@@ -1,42 +1,50 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-
+import { useHttpClient } from "../../shared/hooks/http-hook";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 import PlaceList from "../components/PlaceList";
 
-const DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "The Manor",
-    description: "The house, before it was built...",
-    imageURL:
-      "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
-    address: "5019 Manor Stone Ln.",
-    location: {
-      lat: 29.5099105,
-      lng: -95.8001341
-    },
-    creator: "u1"
-  },
-  {
-    id: "p2",
-    title: "Flatiron",
-    description: "Miss it.",
-    imageURL:
-      "https://lh5.googleusercontent.com/p/AF1QipOMim5bmXED53yBrsSTqGwgOIzg_jdHMgUSvx6y=w408-h272-k-no",
-    address: "807 Main St.",
-    location: {
-      lat: 29.7589609,
-      lng: -95.363447
-    },
-    creator: "u2"
-  }
-];
-
 const UserPlaces = props => {
+  const [loadedPlaces, setLoadedPlaces] = useState();
+  const { isLoading, error, clearError, sendRequest } = useHttpClient();
+
   const userId = useParams().userId;
-  const loadedPlaces = DUMMY_PLACES.filter(place => place.creator === userId)
-  return <PlaceList items={loadedPlaces} />;
+
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      try {
+        const responseData = await sendRequest(
+          `http://localhost:5000/api/places/user/${userId}`
+        );
+        setLoadedPlaces(responseData.places);
+      } catch (error) {
+        // errors are handled in http-hook
+      }
+    };
+    fetchPlaces();
+  }, [sendRequest, userId]);
+
+  const placeDeletedHandler = deletedPlaceId => {
+    setLoadedPlaces(prevPlaces =>
+      prevPlaces.filter(place => place.id !== deletedPlaceId)
+    );
+  };
+
+  return (
+    <React.Fragment>
+      <ErrorModal error={error} onClear={clearError} />
+      {isLoading && (
+        <div className="center">
+          <LoadingSpinner asOverlay />
+        </div>
+      )}
+      {!isLoading && loadedPlaces && (
+        <PlaceList items={loadedPlaces} onDeletePlaces={placeDeletedHandler} />
+      )}
+    </React.Fragment>
+  );
 };
 
 export default UserPlaces;

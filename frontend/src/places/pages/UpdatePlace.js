@@ -1,49 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useHistory } from "react-router-dom";
 
 import Button from "../../shared/components/FormElements/Button";
 import Card from "../../shared/components/UIElements/Card";
 import Input from "../../shared/components/FormElements/Input";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 import {
   VALIDATOR_REQUIRE,
   VALIDATOR_MINLENGTH
 } from "../../shared/util/validators";
+import { AuthContext } from "../../shared/context/auth-context";
 import { useForm } from "../../shared/hooks/form-hook";
+import { useHttpClient } from "../../shared/hooks/http-hook";
 
 import "./PlaceForm.css";
 
-const DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "The Manor",
-    description: "The house, before it was built...",
-    imageURL:
-      "https://geo3.ggpht.com/cbk?panoid=BX8ZnmgBQbRy8XD4-0-qLw&output=thumbnail&cb_client=search.gws-prod.gps&thumb=2&w=408&h=240&yaw=93.37958&pitch=0&thumbfov=100",
-    address: "5019 Manor Stone Ln.",
-    location: {
-      lat: 29.5099105,
-      lng: -95.8001341
-    },
-    creator: "u1"
-  },
-  {
-    id: "p2",
-    title: "Flatiron",
-    description: "Miss it.",
-    imageURL:
-      "https://lh5.googleusercontent.com/p/AF1QipOMim5bmXED53yBrsSTqGwgOIzg_jdHMgUSvx6y=w408-h272-k-no",
-    address: "807 Main St.",
-    location: {
-      lat: 29.7589609,
-      lng: -95.363447
-    },
-    creator: "u2"
-  }
-];
-
 const UpdatePlace = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const auth = useContext(AuthContext);
+  const { isLoading, error, clearError, sendRequest } = useHttpClient();
+  const [loadedPlace, setLoadedPlace] = useState();
+
   const placeId = useParams().placeId;
+  const history = useHistory();
 
   const [formState, inputHandler, setFormData] = useForm(
     {
@@ -59,34 +38,60 @@ const UpdatePlace = () => {
     false
   );
 
-  const identifiedPlace = DUMMY_PLACES.find(p => p.id === placeId);
-
   useEffect(() => {
-    if (identifiedPlace) {
-      setFormData(
-        {
-          title: {
-            value: identifiedPlace.title,
-            isValid: true
+    const fetchPlace = async () => {
+      try {
+        const responseData = await sendRequest(
+          `http://localhost:5000/api/places/${placeId}`
+        );
+        setLoadedPlace(responseData.place);
+        setFormData(
+          {
+            title: {
+              value: responseData.place.title,
+              isValid: true
+            },
+            description: {
+              value: responseData.place.description,
+              isValid: true
+            }
           },
-          description: {
-            value: identifiedPlace.description,
-            isValid: true
-          }
-        },
-        true
-      );
-    }
+          true
+        );
+      } catch (error) {
+        //errors handled in http-hook
+      }
+    };
+    fetchPlace();
+  }, [sendRequest, placeId, setFormData]);
 
-    setIsLoading(false);
-  }, [setFormData, identifiedPlace]);
-
-  const placeUpdateSubmitHandler = event => {
+  const placeUpdateSubmitHandler = async event => {
     event.preventDefault();
-    console.log(formState.inputs);
+    try {
+      await sendRequest(
+        `http://localhost:5000/api/places/${placeId}`,
+        "PATCH",
+        JSON.stringify({
+          title: formState.inputs.title.value,
+          description: formState.inputs.description.value
+        }),
+        { "Content-Type": "application/json" }
+      );
+      history.push(`/${auth.userId}/places`);
+    } catch (error) {
+      //errors handled in http-hook
+    }
   };
 
-  if (!identifiedPlace) {
+  if (isLoading) {
+    return (
+      <div className="center">
+        <LoadingSpinner asOverlay />
+      </div>
+    );
+  }
+
+  if (!loadedPlace && !error) {
     return (
       <div className="center">
         <Card>
@@ -96,42 +101,39 @@ const UpdatePlace = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="center">
-        <h2>Loading</h2>
-      </div>
-    );
-  }
-
   return (
-    <form className="place-form" onSubmit={placeUpdateSubmitHandler}>
-      <Input
-        id="title"
-        element="input"
-        type="text"
-        label="Title"
-        validators={[VALIDATOR_REQUIRE()]}
-        errorText="Enter valid title!!"
-        onInput={inputHandler}
-        initialValue={formState.inputs.title.value}
-        initialValid={formState.inputs.title.isValid}
-      />
+    <React.Fragment>
+      <ErrorModal error={error} onClear={clearError} />
+      {!isLoading && loadedPlace && (
+        <form className="place-form" onSubmit={placeUpdateSubmitHandler}>
+          <Input
+            id="title"
+            element="input"
+            type="text"
+            label="Title"
+            validators={[VALIDATOR_REQUIRE()]}
+            errorText="Enter valid title!!"
+            onInput={inputHandler}
+            initialValue={loadedPlace.title}
+            initialValid={true}
+          />
 
-      <Input
-        id="description"
-        element="textarea"
-        label="Description"
-        validators={[VALIDATOR_MINLENGTH(4)]}
-        errorText="Enter valid description!!"
-        onInput={inputHandler}
-        initialValue={formState.inputs.description.value}
-        initialValid={formState.inputs.description.isValid}
-      />
-      <Button type="submit" disabled={!formState.isValid}>
-        UPDATE THE PLACE FRIEND
-      </Button>
-    </form>
+          <Input
+            id="description"
+            element="textarea"
+            label="Description"
+            validators={[VALIDATOR_MINLENGTH(4)]}
+            errorText="Enter valid description!!"
+            onInput={inputHandler}
+            initialValue={loadedPlace.description}
+            initialValid={true}
+          />
+          <Button type="submit" disabled={!formState.isValid}>
+            UPDATE THE PLACE FRIEND
+          </Button>
+        </form>
+      )}
+    </React.Fragment>
   );
 };
 
