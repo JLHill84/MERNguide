@@ -84,7 +84,10 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  res.json({ mesage: "logged in my friend" });
+  res.json({
+    message: "logged in my friend",
+    user: existingUser.toObject({ getters: true })
+  });
 };
 
 exports.getUsers = getUsers;
