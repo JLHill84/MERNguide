@@ -52,7 +52,7 @@ const signup = async (req, res, next) => {
     name,
     email,
     password,
-    // image, ----- IF UNCOMMENTED, PUT image BACK INTO THE req.body DESTRUCTURING
+    image: req.file.path,
     places: []
   });
 

@@ -1,3 +1,5 @@
+const fs = require("fs");
+
 const uuid = require("uuid/v4");
 const { validationResult } = require("express-validator");
 
@@ -48,7 +50,7 @@ const createPlace = async (req, res, next) => {
     return next(new HttpError("Fix your inputs comrade", 422));
   }
 
-  const { title, description, address, image, creator } = req.body;
+  const { title, description, address, creator } = req.body;
 
   let coordinates;
   try {
@@ -60,7 +62,7 @@ const createPlace = async (req, res, next) => {
   const createdPlace = new Place({
     title,
     description,
-    image,
+    image: req.file.path,
     address,
     location: coordinates,
     creator
@@ -144,17 +146,23 @@ const deletePlace = async (req, res, next) => {
     return next(error);
   }
 
+  const imagePath = place.image;
+
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
     await place.remove({ session: sess });
     place.creator.places.pull(place);
-    await place.creator.save({session: sess});
+    await place.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (e) {
     const error = new HttpError("Bad times on the remove", 500);
     return next(error);
   }
+
+  fs.unlink(imagePath, error => {
+    console.log(error);
+  });
 
   res.status(200).json({ message: "Place deleted!!" });
 };
