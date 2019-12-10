@@ -36,6 +36,35 @@ const Auth = () => {
     false
   );
 
+  const switchModeHandler = () => {
+    if (!isLoginMode) {
+      setFormData(
+        {
+          ...formState.inputs,
+          name: undefined,
+          image: "test"
+        },
+        formState.inputs.email.isValid && formState.inputs.password.isValid
+      );
+    } else {
+      setFormData(
+        {
+          ...formState.inputs,
+          name: {
+            value: "",
+            isValid: false
+          },
+          image: {
+            value: null,
+            isValid: false
+          }
+        },
+        false
+      );
+    }
+    setIsLoginMode(prevMode => !prevMode);
+  };
+
   const authSubmitHandler = async event => {
     event.preventDefault();
 
@@ -63,6 +92,7 @@ const Auth = () => {
         formData.append("name", formState.inputs.name.value);
         formData.append("password", formState.inputs.password.value);
         formData.append("image", formState.inputs.image.value);
+        console.log(formState.inputs);
         const responseData = await sendRequest(
           "http://localhost:5000/api/users/signup",
           "POST",
@@ -73,35 +103,6 @@ const Auth = () => {
         //You guessed it...errors handled by the custom hook commented about ^
       }
     }
-  };
-
-  const switchModeHandler = event => {
-    if (!isLoginMode) {
-      setFormData(
-        {
-          ...formState.inputs,
-          name: undefined,
-          image: undefined
-        },
-        formState.inputs.email.isValid && formState.inputs.password.isValid
-      );
-    } else {
-      setFormData(
-        {
-          ...formState.inputs,
-          name: {
-            value: "",
-            isValid: false
-          },
-          image: {
-            value: null,
-            isValid: false
-          }
-        },
-        false
-      );
-    }
-    setIsLoginMode(prevMode => !prevMode);
   };
 
   return (

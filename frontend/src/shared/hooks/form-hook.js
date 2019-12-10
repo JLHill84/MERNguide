@@ -55,5 +55,6 @@ export const useForm = (initialInputs, initialFormValidity) => {
     });
   }, []);
 
+  console.log(formState.inputs)
   return [formState, inputHandler, setFormData];
 };
