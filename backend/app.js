@@ -23,7 +23,6 @@ app.use((req, res, next) => {
     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
   );
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE");
-
   next();
 });
 
@@ -50,7 +49,8 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    "mongodb+srv://josh:Ch33syrice@cluster0-e4lvt.gcp.mongodb.net/mern?retryWrites=true&w=majority"
+    mongoURL.mongoURL
+    // "mongodb+srv://josh:Ch33syrice@cluster0-e4lvt.gcp.mongodb.net/mern?retryWrites=true&w=majority"
   )
   .then(() => {
     app.listen(5000);

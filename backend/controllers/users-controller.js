@@ -1,18 +1,11 @@
 const uuid = require("uuid/v4");
 const { validationResult } = require("express-validator");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const HttpError = require("../models/http-error");
 const User = require("../models/user");
-
-// NO MORE SEED DATA, IT IS NO LONGER THE WAY
-// const DUMMY_USERS = [
-//   {
-//     id: "u1",
-//     name: "Joshua L. Hill",
-//     email: "test@test.com",
-//     password: "testers"
-//   }
-// ];
+const jotTokenServerKey = require("../util/.keys.js");
 
 const getUsers = async (req, res, next) => {
   let users;
@@ -48,10 +41,21 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
+  let hashedPass;
+  try {
+    hashedPass = await bcrypt.hash(password, 12);
+  } catch (e) {
+    const error = new HttpError(
+      "Couldn't create user, give it another try",
+      500
+    );
+    return next(error);
+  }
+
   const createdUser = new User({
     name,
     email,
-    password,
+    password: hashedPass,
     image: req.file.path,
     places: []
   });
@@ -59,13 +63,28 @@ const signup = async (req, res, next) => {
   try {
     await createdUser.save();
   } catch (error) {
-    console.log(error);
     error = new HttpError("Signup didn't work colleague", 500);
     return next(error);
   }
 
-  // DUMMY_USERS.push(createdUser);
-  res.status(201).json({ user: createdUser.toObject({ getters: true }) });
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        userId: createdUser.id,
+        email: createdUser.email
+      },
+      jotTokenServerKey.jotTokenServerKey,
+      { expiresIn: "1h" }
+    );
+  } catch (e) {
+    error = new HttpError("Signup didn't work colleague", 500);
+    return next(error);
+  }
+
+  res
+    .status(201)
+    .json({ userId: createdUser.id, email: createdUser.email, token: token });
 };
 
 const login = async (req, res, next) => {
@@ -75,19 +94,44 @@ const login = async (req, res, next) => {
   try {
     existingUser = await User.findOne({ email: email });
   } catch (e) {
-    const error = new HttpError("Logging in no bueno", 500);
+    const error = new HttpError("No dice on the login", 500);
     return next(error);
   }
 
-  if (!existingUser || existingUser.password !== password) {
+  if (!existingUser) {
     const error = new HttpError("Bad creds buddy", 401);
     return next(error);
   }
 
-  res.json({
-    message: "logged in my friend",
-    user: existingUser.toObject({ getters: true })
-  });
+  let isValidPass = false;
+  try {
+    isValidPass = await bcrypt.compare(password, existingUser.password);
+  } catch (e) {
+    const error = new HttpError("Incorrect credentials", 500);
+    return next(error);
+  }
+
+  if (!isValidPass) {
+    const error = new HttpError("Bad creds", 401);
+    return next(error);
+  }
+
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        userId: existingUser.id,
+        email: existingUser.email
+      },
+      jotTokenServerKey.jotTokenServerKey,
+      { expiresIn: "1h" }
+    );
+  } catch (e) {
+    error = new HttpError("Logging in didn't work colleague", 500);
+    return next(error);
+  }
+
+  res.json({ userId: existingUser.id, email: existingUser.email, token });
 };
 
 exports.getUsers = getUsers;
