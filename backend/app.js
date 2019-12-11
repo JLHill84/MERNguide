@@ -50,7 +50,6 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(
     mongoURL.mongoURL
-    // "mongodb+srv://josh:Ch33syrice@cluster0-e4lvt.gcp.mongodb.net/mern?retryWrites=true&w=majority"
   )
   .then(() => {
     app.listen(5000);
