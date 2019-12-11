@@ -98,7 +98,7 @@ const Auth = () => {
           "POST",
           formData
         );
-        auth.login(responseData.userId);
+        auth.login(responseData.userId, responseData.token);
       } catch (error) {
         //You guessed it...errors handled by the custom hook commented about ^
       }
