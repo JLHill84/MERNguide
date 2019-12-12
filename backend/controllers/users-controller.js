@@ -5,7 +5,6 @@ const jwt = require("jsonwebtoken");
 
 const HttpError = require("../models/http-error");
 const User = require("../models/user");
-const jotTokenServerKey = require("../util/.keys.js");
 
 const getUsers = async (req, res, next) => {
   let users;
@@ -74,7 +73,7 @@ const signup = async (req, res, next) => {
         userId: createdUser.id,
         email: createdUser.email
       },
-      jotTokenServerKey.jotTokenServerKey,
+      process.env.JOT_KEY,
       { expiresIn: "1h" }
     );
   } catch (e) {
@@ -123,7 +122,7 @@ const login = async (req, res, next) => {
         userId: existingUser.id,
         email: existingUser.email
       },
-      jotTokenServerKey.jotTokenServerKey,
+      process.env.JOT_KEY,
       { expiresIn: "1h" }
     );
   } catch (e) {

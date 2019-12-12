@@ -110,7 +110,7 @@ const Auth = () => {
       <ErrorModal error={error} onClear={clearError} />
       <Card className="authentication">
         {isLoading && <LoadingSpinner asOverlay />}
-        <h2>Gotta login friend</h2>
+        <h2>please login</h2>
         <hr />
         <form onSubmit={authSubmitHandler}>
           {!isLoginMode && (
@@ -118,9 +118,9 @@ const Auth = () => {
               element="input"
               id="name"
               type="text"
-              label="Se Llama"
+              label="name:"
               validators={[VALIDATOR_REQUIRE()]}
-              errorText="Gotta enter a name"
+              errorText="please enter your name"
               onInput={inputHandler}
             />
           )}
@@ -129,34 +129,34 @@ const Auth = () => {
               center
               id="image"
               onInput={inputHandler}
-              errorText="Need an image"
+              // errorText="please pick an image"
             />
           )}
           <Input
             element="input"
             id="email"
             type="email"
-            label="em@il"
+            label="email:"
             validators={[VALIDATOR_EMAIL()]}
-            errorText="add that email"
+            errorText="please add a valid email"
             onInput={inputHandler}
           />
           <Input
             element="input"
             id="password"
             type="password"
-            label="p@sswerd"
+            label="password:"
             autocomplete="current-password"
             validators={[VALIDATOR_MINLENGTH(6)]}
-            errorText="add that password, 6 char min"
+            errorText="plesase add a password with at least 6 characters"
             onInput={inputHandler}
           />
           <Button type="submit" disabled={!formState.isValid}>
-            {isLoginMode ? "Kenny LOGINs" : "SIGNER UP"}
+            {isLoginMode ? "login" : "sign-up"}
           </Button>
         </form>
         <Button inverse onClick={switchModeHandler}>
-          SWITCH IT {isLoginMode ? "SIGNER UP" : "Kenny LOGINs"}
+          switch to {isLoginMode ? "sign-up" : "login"}
         </Button>
       </Card>
     </React.Fragment>

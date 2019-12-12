@@ -52,7 +52,7 @@ const PlaceItem = props => {
         header={props.address}
         contentClass="place-item__modal-content"
         footerClass="place-item__modal-actions"
-        footer={<Button onClick={closeMapHandler}>CLOSE ME</Button>}
+        footer={<Button onClick={closeMapHandler}>exit</Button>}
       >
         <div className="map-container">
           <Map center={props.coordinates} zoom={16} />
@@ -61,20 +61,20 @@ const PlaceItem = props => {
       <Modal
         show={showConfirmModal}
         onCancel={cancelDeleteHandler}
-        header="FOR REAL??"
+        header="confirm delete"
         footerClass="place-item__modal-actions"
         footer={
           <React.Fragment>
             <Button inverse onClick={cancelDeleteHandler}>
-              CANCEL
+              cancel
             </Button>
             <Button danger onClick={confirmDeleteHandler}>
-              BALEETE
+              delete
             </Button>
           </React.Fragment>
         }
       >
-        <p>Are you certain??!??!?!?11</p>
+        <p>you sure?</p>
       </Modal>
       <li className="place-item">
         <Card className="place-item__content">
@@ -92,14 +92,14 @@ const PlaceItem = props => {
           </div>
           <div className="place-item__actions">
             <Button inverse onClick={openMapHandler}>
-              SEE ON MAP
+              map
             </Button>
             {auth.userId === props.creatorId && (
-              <Button to={`/places/${props.id}`}>EDIT</Button>
+              <Button to={`/places/${props.id}`}>edit</Button>
             )}
             {auth.userId === props.creatorId && (
               <Button danger onClick={showDeleteWarningHandler}>
-                DELETE
+                delete
               </Button>
             )}
           </div>

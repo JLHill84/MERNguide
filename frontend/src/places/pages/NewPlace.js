@@ -66,34 +66,34 @@ const NewPlace = () => {
           id="title"
           element="input"
           type="text"
-          label="Title"
+          label="title:"
           validators={[VALIDATOR_REQUIRE()]}
-          errorText="Please pick a real title :P"
+          errorText="title required"
           onInput={inputHandler}
         />
         <Input
           id="description"
           element="textarea"
-          label="Description"
+          label="description:"
           validators={[VALIDATOR_MINLENGTH(4)]}
-          errorText="Please enter a descrip with at least 4 characters..."
+          errorText="needs description with at least 4 characters..."
           onInput={inputHandler}
         />
         <Input
           id="address"
           element="input"
-          label="Address"
+          label="address:"
           validators={[VALIDATOR_REQUIRE()]}
-          errorText="Need real address :("
+          errorText="please input correct address"
           onInput={inputHandler}
         />
         <ImageUpload
           id="image"
           onInput={inputHandler}
-          errorText="Need an image"
+          // errorText="please select an image"
         />
         <Button type="submit" disabled={!formState.isValid}>
-          ADD NEW PLACE FRIEND
+          add place
         </Button>
       </form>
     </React.Fragment>

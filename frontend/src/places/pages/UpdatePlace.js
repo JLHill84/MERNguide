@@ -98,7 +98,7 @@ const UpdatePlace = () => {
     return (
       <div className="center">
         <Card>
-          <h2>Couldn't find the place you're looking for...</h2>
+          <h2>couldn't find the place you're looking for...</h2>
         </Card>
       </div>
     );
@@ -113,9 +113,9 @@ const UpdatePlace = () => {
             id="title"
             element="input"
             type="text"
-            label="Title"
+            label="title:"
             validators={[VALIDATOR_REQUIRE()]}
-            errorText="Enter valid title!!"
+            errorText="please enter a valid title"
             onInput={inputHandler}
             initialValue={loadedPlace.title}
             initialValid={true}
@@ -124,15 +124,15 @@ const UpdatePlace = () => {
           <Input
             id="description"
             element="textarea"
-            label="Description"
+            label="description:"
             validators={[VALIDATOR_MINLENGTH(4)]}
-            errorText="Enter valid description!!"
+            errorText="please enter valid description"
             onInput={inputHandler}
             initialValue={loadedPlace.description}
             initialValid={true}
           />
           <Button type="submit" disabled={!formState.isValid}>
-            UPDATE THE PLACE FRIEND
+            update
           </Button>
         </form>
       )}

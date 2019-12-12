@@ -11,27 +11,27 @@ const NavLinks = props => {
     <ul className="nav-links">
       <li>
         <NavLink to="/" exact>
-          MOAR USERS!
+          users
         </NavLink>
       </li>
       {auth.isLoggedIn && (
         <li>
-          <NavLink to={`/${auth.userId}/places`}>MY PLACES!</NavLink>
+          <NavLink to={`/${auth.userId}/places`}>your places</NavLink>
         </li>
       )}
       {auth.isLoggedIn && (
         <li>
-          <NavLink to="/places/new">ADD MOAR PLACES!</NavLink>
+          <NavLink to="/places/new">add place</NavLink>
         </li>
       )}
       {!auth.isLoggedIn && (
         <li>
-          <NavLink to="/auth">AUTHENTICATE MEOW!</NavLink>
+          <NavLink to="/auth">sign-in/up</NavLink>
         </li>
       )}
       {auth.isLoggedIn && (
         <li>
-          <button onClick={auth.logout}>LOGOUT</button>
+          <button onClick={auth.logout}>logout</button>
         </li>
       )}
     </ul>

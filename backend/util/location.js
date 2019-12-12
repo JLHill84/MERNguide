@@ -1,8 +1,6 @@
 const axios = require("axios");
 
-const API_KEY = require("./.keys.js");
-
-// const API_KEY = "AIzaSyBEm32aBiHXg3Lq8lm707guvOLvDXI1_ZA";
+const API_KEY = process.env.GOOGLE_KEY;
 
 const HttpError = require("../models/http-error");
 
