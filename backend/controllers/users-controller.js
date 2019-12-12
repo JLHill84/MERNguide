@@ -99,7 +99,7 @@ const login = async (req, res, next) => {
   }
 
   if (!existingUser) {
-    const error = new HttpError("Bad creds buddy", 401);
+    const error = new HttpError("Bad creds buddy", 403);
     return next(error);
   }
 
@@ -112,7 +112,7 @@ const login = async (req, res, next) => {
   }
 
   if (!isValidPass) {
-    const error = new HttpError("Bad creds", 401);
+    const error = new HttpError("Bad creds", 403);
     return next(error);
   }
 

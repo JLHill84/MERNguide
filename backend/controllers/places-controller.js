@@ -116,7 +116,7 @@ const updatePlace = async (req, res, next) => {
   }
 
   if (place.creator.toString() !== req.userData.userId) {
-    const error = new HttpError("Can't delete another user's place", 401);
+    const error = new HttpError("Can't edit another user's place", 401);
     return next(error);
   }
 
@@ -148,6 +148,11 @@ const deletePlace = async (req, res, next) => {
 
   if (!place) {
     const error = new HttpError("Didn't find any such place", 404);
+    return next(error);
+  }
+
+  if (place.creator.id !== req.userData.userId) {
+    const error = new HttpError("Can't delete another user's place", 401);
     return next(error);
   }
 
