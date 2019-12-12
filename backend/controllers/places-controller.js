@@ -16,11 +16,11 @@ const getPlaceById = async (req, res, next) => {
   try {
     place = await Place.findById(placeId);
   } catch (error) {
-    return next(new HttpError("Call the DBA...", 404));
+    return next(new HttpError("db error", 404));
   }
 
   if (!place) {
-    return next(new HttpError("No place with that ID pal :(", 404));
+    return next(new HttpError("get by place ID error", 404));
   }
 
   res.json({ place: place.toObject({ getters: true }) });
@@ -33,11 +33,11 @@ const getPlacesByUserId = async (req, res, next) => {
   try {
     places = await Place.find({ creator: userId });
   } catch (error) {
-    return next(new HttpError("Fetching failed friend-o", 500));
+    return next(new HttpError("get by user ID error", 500));
   }
 
   if (!places || places.length === 0) {
-    return next(new HttpError("No places for a user with that ID pal :(", 404));
+    return next(new HttpError("no places for that user", 404));
   }
 
   res.json({ places: places.map(place => place.toObject({ getters: true })) });
@@ -47,7 +47,7 @@ const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return next(new HttpError("Fix your inputs comrade", 422));
+    return next(new HttpError("bad inputs", 422));
   }
 
   const { title, description, address } = req.body;
@@ -72,12 +72,12 @@ const createPlace = async (req, res, next) => {
   try {
     user = await User.findById(req.userData.userId);
   } catch (e) {
-    const error = new HttpError("Failure :(", 500);
+    const error = new HttpError("error finding by ID", 500);
     return next(error);
   }
 
   if (!user) {
-    const error = new HttpError("Could not find that friend", 404);
+    const error = new HttpError("user not found", 404);
     return next(error);
   }
 
@@ -89,9 +89,7 @@ const createPlace = async (req, res, next) => {
     await user.save({ session: sess });
     await sess.commitTransaction();
   } catch (err) {
-    console.log("fresh run");
-    console.log(err);
-    const error = new HttpError("It didn't work colleague", 500);
+    const error = new HttpError("try again", 500);
     return next(error);
   }
 
@@ -102,7 +100,7 @@ const updatePlace = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return next(new HttpError("Fix your patch inputs comrade", 422));
+    return next(new HttpError("bad inputs", 422));
   }
   const { title, description } = req.body;
   const placeId = req.params.pid;
@@ -111,12 +109,12 @@ const updatePlace = async (req, res, next) => {
   try {
     place = await Place.findById(placeId);
   } catch (err) {
-    const error = new HttpError("Bad times", 500);
+    const error = new HttpError("place findByID error", 500);
     return next(error);
   }
 
   if (place.creator.toString() !== req.userData.userId) {
-    const error = new HttpError("Can't edit another user's place", 401);
+    const error = new HttpError("you can only edit your places", 401);
     return next(error);
   }
 
@@ -126,7 +124,7 @@ const updatePlace = async (req, res, next) => {
   try {
     await place.save();
   } catch (e) {
-    const error = new HttpError("Bad times on the save", 500);
+    const error = new HttpError("save failed", 500);
     return next(error);
   }
 
@@ -142,17 +140,17 @@ const deletePlace = async (req, res, next) => {
   try {
     place = await Place.findById(placeId).populate("creator");
   } catch (err) {
-    const error = new HttpError("Bad times delete find", 500);
+    const error = new HttpError("delete findById error", 500);
     return next(error);
   }
 
   if (!place) {
-    const error = new HttpError("Didn't find any such place", 404);
+    const error = new HttpError("no place found", 404);
     return next(error);
   }
 
   if (place.creator.id !== req.userData.userId) {
-    const error = new HttpError("Can't delete another user's place", 401);
+    const error = new HttpError("you can only delete your places", 401);
     return next(error);
   }
 
@@ -166,7 +164,7 @@ const deletePlace = async (req, res, next) => {
     await place.creator.save({ session: sess });
     await sess.commitTransaction();
   } catch (e) {
-    const error = new HttpError("Bad times on the remove", 500);
+    const error = new HttpError("db remove failed", 500);
     return next(error);
   }
 
@@ -174,7 +172,7 @@ const deletePlace = async (req, res, next) => {
     console.log(error);
   });
 
-  res.status(200).json({ message: "Place deleted!!" });
+  res.status(200).json({ message: "place deleted" });
 };
 
 exports.getPlaceById = getPlaceById;

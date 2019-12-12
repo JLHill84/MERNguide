@@ -29,7 +29,7 @@ app.use("/api/places", placesRoutes);
 app.use("/api/users", usersRoutes);
 
 app.use((req, res, next) => {
-  const error = new HttpError("Could not find route", 404);
+  const error = new HttpError("route not found", 404);
   next(error);
 });
 
@@ -43,7 +43,7 @@ app.use((error, req, res, next) => {
     return next(error);
   }
   res.status(error.code || 500);
-  res.json({ message: error.message || "ERROR...ERROR" });
+  res.json({ message: error.message || "error...error" });
 });
 
 mongoose

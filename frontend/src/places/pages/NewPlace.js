@@ -41,7 +41,6 @@ const NewPlace = () => {
 
   const placeSubmitHandler = async event => {
     event.preventDefault();
-    console.log("called");
     try {
       const formData = new FormData();
       formData.append("title", formState.inputs.title.value);

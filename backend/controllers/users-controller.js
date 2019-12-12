@@ -11,7 +11,7 @@ const getUsers = async (req, res, next) => {
   try {
     users = await User.find({}, "-password");
   } catch (err) {
-    const error = new HttpError("Did not collect all users", 500);
+    const error = new HttpError("did not collect all users", 500);
     return next(error);
   }
   res.json({
@@ -23,7 +23,7 @@ const signup = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return next(new HttpError("Fix your signup inputs comrade", 422));
+    return next(new HttpError("fix inputs", 422));
   }
   const { name, email, password } = req.body;
 
@@ -31,12 +31,12 @@ const signup = async (req, res, next) => {
   try {
     existingUser = await User.findOne({ email: email });
   } catch (e) {
-    const error = new HttpError("Signing up no bueno", 500);
+    const error = new HttpError("sign-up failed", 500);
     return next(error);
   }
 
   if (existingUser) {
-    const error = new HttpError("User already exists :P", 422);
+    const error = new HttpError("a user with that email already exists", 422);
     return next(error);
   }
 
@@ -45,7 +45,7 @@ const signup = async (req, res, next) => {
     hashedPass = await bcrypt.hash(password, 12);
   } catch (e) {
     const error = new HttpError(
-      "Couldn't create user, give it another try",
+      "user creation failed",
       500
     );
     return next(error);
@@ -62,7 +62,7 @@ const signup = async (req, res, next) => {
   try {
     await createdUser.save();
   } catch (error) {
-    error = new HttpError("Signup didn't work colleague", 500);
+    error = new HttpError("sign-up failed", 500);
     return next(error);
   }
 
@@ -77,7 +77,7 @@ const signup = async (req, res, next) => {
       { expiresIn: "1h" }
     );
   } catch (e) {
-    error = new HttpError("Signup didn't work colleague", 500);
+    error = new HttpError("sign-up failed", 500);
     return next(error);
   }
 
@@ -93,12 +93,12 @@ const login = async (req, res, next) => {
   try {
     existingUser = await User.findOne({ email: email });
   } catch (e) {
-    const error = new HttpError("No dice on the login", 500);
+    const error = new HttpError("login failed", 500);
     return next(error);
   }
 
   if (!existingUser) {
-    const error = new HttpError("Bad creds buddy", 403);
+    const error = new HttpError("invalid credentials", 403);
     return next(error);
   }
 
@@ -106,12 +106,12 @@ const login = async (req, res, next) => {
   try {
     isValidPass = await bcrypt.compare(password, existingUser.password);
   } catch (e) {
-    const error = new HttpError("Incorrect credentials", 500);
+    const error = new HttpError("invalid credentials", 500);
     return next(error);
   }
 
   if (!isValidPass) {
-    const error = new HttpError("Bad creds", 403);
+    const error = new HttpError("invalid credentials", 403);
     return next(error);
   }
 
@@ -126,7 +126,7 @@ const login = async (req, res, next) => {
       { expiresIn: "1h" }
     );
   } catch (e) {
-    error = new HttpError("Logging in didn't work colleague", 500);
+    error = new HttpError("login failed", 500);
     return next(error);
   }
 
