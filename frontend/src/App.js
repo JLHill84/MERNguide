@@ -17,6 +17,10 @@ import { useAuth } from "./shared/hooks/auth-hook";
 
 import "./App.css";
 
+// example of code splitting. requires the use of a <Suspense>
+// component around the {routes} inside of <main>
+// const Users = React.lazy(() => import("./users/pages/Users"));
+
 const App = () => {
   const { token, login, logout, userId } = useAuth();
   let routes;
