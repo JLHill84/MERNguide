@@ -50,7 +50,7 @@ const createPlace = async (req, res, next) => {
     return next(new HttpError("Fix your inputs comrade", 422));
   }
 
-  const { title, description, address, creator } = req.body;
+  const { title, description, address } = req.body;
 
   let coordinates;
   try {
@@ -65,12 +65,12 @@ const createPlace = async (req, res, next) => {
     image: req.file.path,
     address,
     location: coordinates,
-    creator
+    creator: req.userData.userId
   });
 
   let user;
   try {
-    user = await User.findById(creator);
+    user = await User.findById(req.userData.userId);
   } catch (e) {
     const error = new HttpError("Failure :(", 500);
     return next(error);
