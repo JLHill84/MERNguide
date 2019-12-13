@@ -52,7 +52,7 @@ mongoose
     `mongodb+srv://${keys.DB_USER}:${keys.DB_PASS}@cluster0-e4lvt.gcp.mongodb.net/${keys.DB_NAME}?retryWrites=true&w=majority`
   )
   .then(() => {
-    app.listen(5000);
+    app.listen(process.env.PORT || 5000);
   })
   .catch(error => {
     console.log(error);
